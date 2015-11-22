@@ -1,10 +1,13 @@
 from collections import Counter
 from copy import deepcopy
 
-class ClassificationTree:
+class ClassificationTree(dict):
 
     def __init__(self):
-        self.tree = {}
+        super().__init__()
+
+    #need to find a way to prevent setting the
+    #classes evaluation value outside of class
 
     def TreeGrowth( self, data, class_attr ):
         '''
@@ -48,8 +51,8 @@ class ClassificationTree:
             print("Error: class is not an attribute")
             return "Error"
 
-        self.tree =  self.__PrivateTreeGrowth( data, class_attr, set() )
-        return deepcopy(self.tree)
+        self.update( self.__PrivateTreeGrowth( data, class_attr, set() ) )
+        return deepcopy(self)
 
     def __PrivateTreeGrowth( self, data, class_attr, attr_done ):
         #'''
@@ -122,6 +125,9 @@ class ClassificationTree:
                 root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr_done )
         return root
 
+    def Classify(record):
+        print("Not Implemented")
+
     # This is a dummy
     @staticmethod
     def find_best_split( data, attributes ):
@@ -144,6 +150,8 @@ def FakeBadData():
 
 if __name__ == '__main__':
     z = ClassificationTree()
-    x = z.FakeData()
-    y = z.TreeGrowth( x, "class" )
+    y = z.TreeGrowth( FakeData(), "class" )
+    print("Function Return:")
     print(y)
+    print("ClassificationTree Value:")
+    print(z)
