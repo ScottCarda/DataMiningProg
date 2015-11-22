@@ -125,8 +125,15 @@ class ClassificationTree(dict):
                 root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr_done )
         return root
 
-    def Classify(record):
-        print("Not Implemented")
+    # Not Finished
+    def Classify( self, record ):
+        attr = list(self.keys())[0]
+        x = z[attr][record[attr]]
+        if type(x) is not dict:
+            return x
+        else:
+            print('recurse!')
+            return x
 
     # This is a dummy
     @staticmethod
@@ -136,7 +143,16 @@ class ClassificationTree(dict):
 def FakeData():
     data = list()
     for i in range(1, 30, 3):
-        record = {'a':i, 'b':i+1, 'c':i+2, 'class': i%4}
+        val = i%4
+        if val == 0:
+            classVal = 'red'
+        elif val == 1:
+            classVal = 'green'
+        elif val == 2:
+            classVal = 'blue'
+        elif val == 3:
+            classVal = 'yellow'
+        record = {'a':i, 'b':i+1, 'c':i+2, 'class': classVal}
         data.append(record)
     return data
 
