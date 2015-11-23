@@ -7,7 +7,7 @@ class ClassificationTree(dict):
         super().__init__()
 
     #need to find a way to prevent setting the
-    #classes evaluation value outside of class
+    #class's evaluation value outside of class
 
     def TreeGrowth( self, data, class_attr ):
         '''
@@ -55,54 +55,10 @@ class ClassificationTree(dict):
         return deepcopy(self)
 
     def __PrivateTreeGrowth( self, data, class_attr, attr_done ):
-        #'''
-        #Returns a classification tree. The data parameter should be a list of
-        #records, each record being a dictionary of the
-        #form {attribute name: value}. The class_attr is the name of the attribute
-        #that is to be the class. The optional attr_done parameter should
-        #be a set of attribute names.
-        #'''
-        ##things to stop on:
-        ##done- empty data (ERROR)
-        ##done- data is not well formatted or wrong type (ERROR)
-        ##    - attr_done is not well formatted or wrong type (ERROR)
-        ##done- class_attr is not a string (ERROR)
-        ##done- class_attr is not an attribute (ERROR)
-
-        #if type(class_attr) is not str:
-        #    print("Error: class is not a string")
-        #    return "Error"
-        #elif not data:
-        #    print("Error: empty data")
-        #    return "Error"
-        #elif type(data) is not list:
-        #    print("Error: data is not a list of dictionaries")
-        #    return "Error"
-        #elif type(data[0]) is not dict:
-        #    print("Error: data is not a list of dictionaries")
-        #    return "Error"
-
         attributes = {key for key in data[0].keys()}
-
-        #for record in data:
-        #    if type(record) is not dict:
-        #        print("Error: data is not a list of dictionaries")
-        #        return "Error"
-        #    elif record.keys() != attributes:
-        #        print("Error: all records in data do not share attribute set")
-        #        return "Error"
-
-        #if class_attr not in attributes:
-        #    print("Error: class is not an attribute")
-        #    return "Error"
-
         attributes -= attr_done
         attributes -= {class_attr}
         class_values = [record[class_attr] for record in data]
-
-        #things to stop on:
-        #done- empty attributes (will happen, return majority class?)
-        #done- data pure (will happen, return class)
         if class_values.count(class_values[0]) == len(class_values):
             #data is pure
             return class_values[0]
@@ -111,29 +67,32 @@ class ClassificationTree(dict):
             return Counter(class_values).most_common()
         else:
             best_split = ClassificationTree.find_best_split( data, attributes )
-            #root.test_cond = find_best_split( data, attributes )
             root = {best_split:{}}
             values = {record[best_split] for record in data}
             for v in values:
                 sub_data = [record for record in data if record[best_split] == v]
-                #sub_attributes = attributes - {best_split}
-                #sub_attributes = {attr for atr in attributes if attr != best_split}
-                #sub_attributes = attributes.copy()
-                #sub_attributes.remove(root.test_cond)
                 sub_attr_done = set(attr_done)
                 sub_attr_done.add(best_split)
                 root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr_done )
         return root
 
-    # Not Finished
     def Classify( self, record ):
-        attr = list(self.keys())[0]
-        x = z[attr][record[attr]]
-        if type(x) is not dict:
-            return x
-        else:
-            print('recurse!')
-            return x
+        tree = deepcopy(dict(self))
+        while True:
+            attr = list(tree.keys())[0]
+            x = tree[attr][record[attr]]
+            if type(x) is not dict:
+                return x
+            else:
+                tree = x
+
+    def BuildFakeTree( self ):
+        tree = { 'a': {
+            10: "blue", 1: { 'b': {
+                5: "red", 2: { 'c': {
+                    9: "yellow", 3: "green"
+            } } } } } }
+        self.update( tree )
 
     # This is a dummy
     @staticmethod
