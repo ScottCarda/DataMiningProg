@@ -51,13 +51,15 @@ class ClassificationTree(dict):
             print("Error: class is not an attribute")
             return "Error"
 
-        self.update( self.__PrivateTreeGrowth( data, class_attr, set() ) )
+        attributes -= {class_attr}
+
+        self.update( self.__PrivateTreeGrowth( data, class_attr, attributes ) )
         return deepcopy(self)
 
-    def __PrivateTreeGrowth( self, data, class_attr, attr_done ):
-        attributes = {key for key in data[0].keys()}
-        attributes -= attr_done
-        attributes -= {class_attr}
+    def __PrivateTreeGrowth( self, data, class_attr, attributes ):
+        #attributes = {key for key in data[0].keys()}
+        #attributes -= attr_done
+        #attributes -= {class_attr}
         class_values = [record[class_attr] for record in data]
         if class_values.count(class_values[0]) == len(class_values):
             #data is pure
@@ -71,13 +73,22 @@ class ClassificationTree(dict):
             values = {record[best_split] for record in data}
             for v in values:
                 sub_data = [record for record in data if record[best_split] == v]
-                sub_attr_done = set(attr_done)
-                sub_attr_done.add(best_split)
-                root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr_done )
+                sub_attr = set(attr_done)
+                sub_attr -= {best_split}
+                root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr )
         return root
 
     def Classify( self, record ):
+
+        if not self:
+            print("Error: tree not made yet! Use the TreeGrowth function",
+                  "to create a classification tree.")
+            return "Error"
+
         tree = deepcopy(dict(self))
+        #count = 0
+        #LIMIT = 500
+        #while True and count < LIMIT:
         while True:
             attr = list(tree.keys())[0]
             x = tree[attr][record[attr]]
@@ -85,6 +96,10 @@ class ClassificationTree(dict):
                 return x
             else:
                 tree = x
+                #count += 1
+
+        #print( "Error: Required tree depth too large!" )
+        #return "Error"
 
     def BuildFakeTree( self ):
         tree = { 'a': {
