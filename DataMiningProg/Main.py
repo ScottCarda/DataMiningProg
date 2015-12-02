@@ -1,15 +1,16 @@
 import sys
 import ClassificationTree as CTree
+import random
 
 def ConvertToBinary( record ):
     for i in range( 0, len(record)):
-        if record == 'y' or record == 'democrat':
+        if record[i] == 'y' or record[i] == 'democrat':
             record[i] = '1'
-        elif record == 'n' or record == 'republican':
+        elif record[i] == 'n' or record[i] == 'republican':
             record[i] = '0'
         else:
             record[i] = ''
-        return ''.join(record)
+    return ''.join(record)
 
 def ConvertToDictionary( binstring, attributes ):
     count = len(binstring)
@@ -33,7 +34,7 @@ def Main():
         rand_val = random.randint(0,1) # select either zero or one
         #if val is one remove the class from each record
         if rand_val == 1:
-            new_record = record.split(',')
+            new_record = record[:-1].split(',')
             new_record = new_record[1:]
             new_record = ConvertToBinary(new_record)     
             #append record to the unlabel list and new_record to binary list
@@ -52,7 +53,7 @@ def Main():
 
     #classify labeled data
     tree = CTree.ClassificationTree()
-    tree.TreeGrowth( labeled_data, attributes[0] )
+    tree.TreeGrowth( labeled_dicts, attributes[0] )
 
     #cluster unlabeled data
     clusters = cen_sel_random(unlabeled)

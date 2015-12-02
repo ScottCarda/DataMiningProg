@@ -1,5 +1,6 @@
 from collections import Counter
 from copy import deepcopy
+from math import log
 
 class ClassificationTree(dict):
 
@@ -69,7 +70,7 @@ class ClassificationTree(dict):
             #empty attributes
             return Counter(class_values).most_common()
         else:
-            best_split = ClassificationTree.find_best_split( data, attributes )
+            best_split = ClassificationTree.find_best_split( data, attributes, class_attr )
             root = {best_split:{}}
             values = {record[best_split] for record in data}
             for v in values:
@@ -110,10 +111,97 @@ class ClassificationTree(dict):
             } } } } } }
         self.update( tree )
 
-    # This is a dummy
     @staticmethod
-    def find_best_split( data, attributes ):
-        return list(attributes)[0]
+    def find_best_split( data, attributes, class_attr ):
+        # get the values to calculate entropy
+        entropies = {}
+        num_records = len( data )
+        rep_count = 0;
+        dem_count = 0;
+        attr_count = {}
+
+        attr_vals = [ 'A=T', 'A=F', 'A=T:+', 'A=T:-', 'A=F:+', 'A=F:-' ]
+
+        # create a dict for each attribute to hold their values
+        # needed to calculate its entropy
+        for attr in attributes:
+            # initialize a dict for each attribute
+            attr_count[attr] = {}
+            # initialize the values for each attribute
+            for val in attr_vals:
+                attr_count[attr][val] = 0.0
+
+        # grab the values to calculate the entropies
+        for record in data:
+            if record[class_attr] == '0':
+                rep_count = rep_count + 1.0;
+            if record[class_attr] == '1':
+                dem_count = dem_count + 1.0;                
+            for attr in attributes:
+                if record[attr] == '1':
+                    #increment A=T
+                    attr_count[attr]['A=T'] += 1.0
+                    if record[class_attr] == '0':
+                        #increment A=T:-
+                        attr_count[attr]['A=T:-'] += 1.0
+                    if record[class_attr] == '1':
+                        #increment A=T:+
+                        attr_count[attr]['A=T:+'] += 1.0
+                if record[attr] == '0':
+                    #increment A=F
+                    attr_count[attr]['A=F'] += 1
+                    if record[class_attr] == '0':
+                        #increment A=F:-
+                        attr_count[attr]['A=F:-'] += 1.0
+                    if record[class_attr] == '1':
+                        #increment A=F:+
+                        attr_count[attr]['A=F:+'] += 1.0
+        
+        # calculate each attribute's entropy
+        Eo_rep = -1 * (rep_count/num_records) * log((rep_count/num_records), 2) if rep_count != 0 else 0
+        Eo_dem = -1 * (dem_count/num_records) * log((dem_count/num_records), 2) if dem_count != 0 else 0
+        Eorig = Eo_rep + Eo_dem
+
+        for attr in attributes:
+            # check if all the data goes one way or the other
+            if attr_count[attr]['A=T'] != 0 and attr_count[attr]['A=F'] != 0:
+
+                # Attribute = T
+                # Attribute = T : positive
+                t = attr_count[attr]['A=T:+'] / attr_count[attr]['A=T']
+                aTp = -1 * t * log(t, 2) if t != 0 else 0
+                # Attribute = T : negative
+                t = attr_count[attr]['A=T:-'] / attr_count[attr]['A=T']
+                aTn = -1 * t * log(t, 2) if t != 0 else 0
+                E_aT = aTp + aTn
+
+                # Attribute = F
+                # Attribute = F : positive
+                t = attr_count[attr]['A=F:+'] / attr_count[attr]['A=F']
+                aFp = -1 * t * log(t, 2) if t != 0 else 0
+                # Attribute = F : negative
+                t = attr_count[attr]['A=F:-'] / attr_count[attr]['A=F']
+                aFn = -1 * t * log(t, 2) if t != 0 else 0
+                E_aF = aFp + aFn
+
+                # Calculate the entropy of the attribute
+                tT = attr_count[attr]['A=T'] / num_records
+                tF = attr_count[attr]['A=F'] / num_records
+                entropies[attr] = Eorig - tT * E_aT - tF * E_aF
+            else:
+                # all of the data when one way, so there is no info gain
+                entropies[attr] = 0
+
+        # determine the best of the entropies
+        maxEntropyVal = -1
+        maxEntropyAttr = ''
+        for attr in entropies:
+            if entropies[attr] > maxEntropyVal:
+                maxEntropyVal = entropies[attr]
+                maxEntropyAttr = attr
+
+        # return attribute best to split
+        return maxEntropyAttr
 
 def FakeData():
     data = list()
