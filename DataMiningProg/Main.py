@@ -11,7 +11,6 @@ def ConvertToBinary( record ):
             record[i] = ''
         return ''.join(record)
 
-
 def ConvertToDictionary( binstring, attributes ):
     count = len(binstring)
     return_dict = dict()
@@ -58,18 +57,27 @@ def Main():
     #cluster unlabeled data
     clusters = cen_sel_random(unlabeled)
 
-    #get centroids from clusters
+    #classify unlabeled data
     centroids = list()
+    data = list(labeled)
     for cluster in clusters:
+        #get centroids from clusters
         centroid = ConvertToDictionary( cluster.pop(0), attributes[1:] )
+        #classify centroid
         clss = tree.Classify( centroid )
+        #convert class to binary value
         if clss == 'democrat':
             clss = '1'
         elif clss == 'republican':
             clss = '0'
+        #apply class to all records in a cluster
         for record in cluster:
+            data.append( clss + record )
 
+    #regrow tree
+    tree.TreeGrowth( data, attributes[0] )
 
-    #classify centroids
+    return tree
+
 if __name__ == '__main__':
     Main()

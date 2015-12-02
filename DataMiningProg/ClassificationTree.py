@@ -53,6 +53,7 @@ class ClassificationTree(dict):
 
         attributes -= {class_attr}
 
+        self.clear()
         self.update( self.__PrivateTreeGrowth( data, class_attr, attributes ) )
         return deepcopy(self)
 
