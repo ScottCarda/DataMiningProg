@@ -38,6 +38,7 @@ class ClassificationTree(dict):
             print("Error: data is not a list of dictionaries")
             return "Error"
 
+        #acquire attributes from data
         attributes = {key for key in data[0].keys()}
 
         for record in data:
@@ -52,31 +53,42 @@ class ClassificationTree(dict):
             print("Error: class is not an attribute")
             return "Error"
 
+        #remove class from the attribute set
         attributes -= {class_attr}
 
+        #create classification tree
+        self.clear()
         self.update( self.__PrivateTreeGrowth( data, class_attr, attributes ) )
+
+        #return a copy of tree
         return deepcopy(self)
 
     def __PrivateTreeGrowth( self, data, class_attr, attributes ):
-        #attributes = {key for key in data[0].keys()}
-        #attributes -= attr_done
-        #attributes -= {class_attr}
+
+        #acquire all possible values of class
         class_values = [record[class_attr] for record in data]
+
+        #base cases
         if class_values.count(class_values[0]) == len(class_values):
             #data is pure
             return class_values[0]
         elif not attributes:
             #empty attributes
             return Counter(class_values).most_common()
+
         else:
-            best_split = ClassificationTree.find_best_split( data, attributes )
-            root = {best_split:{}}
+            #get the attribute that produces the best split
+            best_split = ClassificationTree.find_best_split( data, attributes, class_attr )
+            root = {best_split:{}} #initialize the tree to return
+            #acquire all possible values of best split attribute
             values = {record[best_split] for record in data}
             for v in values:
                 sub_data = [record for record in data if record[best_split] == v]
-                sub_attr = set(attr_done)
-                sub_attr -= {best_split}
+                sub_attr = set(attributes)  #copy attribute set
+                sub_attr -= {best_split}    #remove attribute used to split
+                #get subtrees
                 root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr )
+        #return the classification tree
         return root
 
     def Classify( self, record ):
@@ -87,9 +99,6 @@ class ClassificationTree(dict):
             return "Error"
 
         tree = deepcopy(dict(self))
-        #count = 0
-        #LIMIT = 500
-        #while True and count < LIMIT:
         while True:
             attr = list(tree.keys())[0]
             x = tree[attr][record[attr]]
@@ -97,10 +106,6 @@ class ClassificationTree(dict):
                 return x
             else:
                 tree = x
-                #count += 1
-
-        #print( "Error: Required tree depth too large!" )
-        #return "Error"
 
     def BuildFakeTree( self ):
         tree = { 'a': {
@@ -110,7 +115,6 @@ class ClassificationTree(dict):
             } } } } } }
         self.update( tree )
 
-    # This is a dummy
     @staticmethod
     def find_best_split( data, attributes, class_attr ):
         # get the values to calculate entropy
@@ -122,7 +126,7 @@ class ClassificationTree(dict):
 
         attr_vals = [ 'A=T', 'A=F', 'A=T:+', 'A=T:-', 'A=F:+', 'A=F:-' ]
 
-        # create a dict for each attribute to hold thier values
+        # create a dict for each attribute to hold their values
         # needed to calculate its entropy
         for attr in attributes:
             # initialize a dict for each attribute
@@ -133,67 +137,75 @@ class ClassificationTree(dict):
 
         # grab the values to calculate the entropies
         for record in data:
-            if record[class_atter] == 'republican':
+            if record[class_attr] == '0':
                 rep_count = rep_count + 1.0;
-            if record[class_atter] == 'democrat':
+            if record[class_attr] == '1':
                 dem_count = dem_count + 1.0;                
             for attr in attributes:
-                if record[attr] == 1:
+                if record[attr] == '1':
                     #increment A=T
                     attr_count[attr]['A=T'] += 1.0
-                    if record[class_atter] == 'republican':
+                    if record[class_attr] == '0':
                         #increment A=T:-
                         attr_count[attr]['A=T:-'] += 1.0
-                    if record[class_atter] == 'democrat':
+                    if record[class_attr] == '1':
                         #increment A=T:+
                         attr_count[attr]['A=T:+'] += 1.0
-                if record[attr] == 0:
+                if record[attr] == '0':
                     #increment A=F
                     attr_count[attr]['A=F'] += 1
-                    if record[class_atter] == 'republican':
+                    if record[class_attr] == '0':
                         #increment A=F:-
                         attr_count[attr]['A=F:-'] += 1.0
-                    if record[class_atter] == 'democrat':
+                    if record[class_attr] == '1':
                         #increment A=F:+
                         attr_count[attr]['A=F:+'] += 1.0
         
         # calculate each attribute's entropy
-        Eorig = -1 * (rep_count/num_records) * log((rep_count/num_records), 2) - (dem_count/num_records) * log((dem_count/num_records), 2)
+        Eo_rep = -1 * (rep_count/num_records) * log((rep_count/num_records), 2) if rep_count != 0 else 0
+        Eo_dem = -1 * (dem_count/num_records) * log((dem_count/num_records), 2) if dem_count != 0 else 0
+        Eorig = Eo_rep + Eo_dem
 
         for attr in attributes:
-            # Attribute = T
-            # Attribute = T : positive
-            t = attr_count[attr]['A=T:+'] / attr_count[attr]['A=T']
-            aTp = -1 * t * log(t, 2)
-            # Attribute = T : negative
-            t = attr_count[attr]['A=T:-'] / attr_count[attr]['A=T']
-            aTn = -1 * t * log(t, 2)
-            E_aT = aTp + aTn
+            # check if all the data goes one way or the other
+            if attr_count[attr]['A=T'] != 0 and attr_count[attr]['A=F'] != 0:
 
-            # Attribute = F
-            # Attribute = F : positive
-            t = attr_count[attr]['A=F:+'] / attr_count[attr]['A=F']
-            aFp = -1 * t * log(t, 2)
-            # Attribute = F : negative
-            t = attr_count[attr]['A=F:-'] / attr_count[attr]['A=F']
-            aFn = -1 * t * log(t, 2)
-            E_aF = aFp + aFn
+                # Attribute = T
+                # Attribute = T : positive
+                t = attr_count[attr]['A=T:+'] / attr_count[attr]['A=T']
+                aTp = -1 * t * log(t, 2) if t != 0 else 0
+                # Attribute = T : negative
+                t = attr_count[attr]['A=T:-'] / attr_count[attr]['A=T']
+                aTn = -1 * t * log(t, 2) if t != 0 else 0
+                E_aT = aTp + aTn
 
-            # Calculate the entropy of the attribute
-            tT = attr_count[attr]['A=T'] / num_records
-            tF = attr_count[attr]['A=f'] / num_records
-            entropies[attr] = Eorig - tT * log(E_aT, 2) - tF * log(E_aF, 2)
+                # Attribute = F
+                # Attribute = F : positive
+                t = attr_count[attr]['A=F:+'] / attr_count[attr]['A=F']
+                aFp = -1 * t * log(t, 2) if t != 0 else 0
+                # Attribute = F : negative
+                t = attr_count[attr]['A=F:-'] / attr_count[attr]['A=F']
+                aFn = -1 * t * log(t, 2) if t != 0 else 0
+                E_aF = aFp + aFn
+
+                # Calculate the entropy of the attribute
+                tT = attr_count[attr]['A=T'] / num_records
+                tF = attr_count[attr]['A=F'] / num_records
+                entropies[attr] = Eorig - tT * E_aT - tF * E_aF
+            else:
+                # all of the data when one way, so there is no info gain
+                entropies[attr] = 0
 
         # determine the best of the entropies
         maxEntropyVal = -1
         maxEntropyAttr = ''
         for attr in entropies:
             if entropies[attr] > maxEntropyVal:
+                maxEntropyVal = entropies[attr]
                 maxEntropyAttr = attr
-    
 
         # return attribute best to split
-        return attr
+        return maxEntropyAttr
 
 def FakeData():
     data = list()

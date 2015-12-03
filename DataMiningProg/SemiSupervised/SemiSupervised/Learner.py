@@ -1,5 +1,5 @@
-import sys
-import ClassificationTree as CTree
+from . import ClassificationTree
+from . import cen_sel_random
 import random
 
 def ConvertToBinary( record ):
@@ -19,32 +19,32 @@ def ConvertToDictionary( binstring, attributes ):
         return_dict[attributes[i]] = binstring[i]
     return return_dict
 
-def Main():
-    
-    if len( sys.argv ) != 2:
-        print("Usage error")
-        return False
+def ReadDataFile( filename ):
 
-    csvFile = open( sys.argv[1] )
     labeled = [] #label records in csv file
     unlabeled = [] #unlabel records in csv file
 
-    attributes = csvFile.readline()[:-1].split(',')
-    for record in csvFile: # add one to record 
-        rand_val = random.randint(0,1) # select either zero or one
-        #if val is one remove the class from each record
-        if rand_val == 1:
-            new_record = record[:-1].split(',')
-            new_record = new_record[1:]
-            new_record = ConvertToBinary(new_record)     
-            #append record to the unlabel list and new_record to binary list
-            unlabeled.append(new_record)
-        else:
-            new_record = record.split(',')
-            new_record = ConvertToBinary(new_record)
-            labeled.append(new_record)
+    with open( filename ) as csvFile:
+        attributes = csvFile.readline()[:-1].split(',')
+        for Record in csvFile: # add one to record 
+            record = Record.strip()
+            if record:
+                rand_val = random.randint(0,1) # select either zero or one
+                #if val is one remove the class from each record
+                if rand_val == 1:
+                    new_record = record.split(',')
+                    new_record = new_record[1:]
+                    new_record = ConvertToBinary(new_record)     
+                    #append record to the unlabel list and new_record to binary list
+                    unlabeled.append(new_record)
+                else:
+                    new_record = record.split(',')
+                    new_record = ConvertToBinary(new_record)
+                    labeled.append(new_record)
 
-    csvFile.close()
+    return attributes, labeled, unlabeled
+
+def CreateLearner( attributes, labeled, unlabeled ):
 
     #convert labeled data into dictionary format
     labeled_dicts = list()
@@ -52,7 +52,7 @@ def Main():
         labeled_dicts.append( ConvertToDictionary( record, attributes ) )
 
     #classify labeled data
-    tree = CTree.ClassificationTree()
+    tree = ClassificationTree()
     tree.TreeGrowth( labeled_dicts, attributes[0] )
 
     #cluster unlabeled data
@@ -67,18 +67,20 @@ def Main():
         #classify centroid
         clss = tree.Classify( centroid )
         #convert class to binary value
-        if clss == 'democrat':
-            clss = '1'
-        elif clss == 'republican':
-            clss = '0'
+        #if clss == 'democrat':
+        #    clss = '1'
+        #elif clss == 'republican':
+        #    clss = '0'
         #apply class to all records in a cluster
         for record in cluster:
             data.append( clss + record )
 
+    #convert labeled data into dictionary format
+    data_dicts = list()
+    for record in data:
+        data_dicts.append( ConvertToDictionary( record, attributes ) )
+
     #regrow tree
-    tree.TreeGrowth( data, attributes[0] )
+    tree.TreeGrowth( data_dicts, attributes[0] )
 
     return tree
-
-if __name__ == '__main__':
-    Main()
