@@ -1,0 +1,25 @@
+Folder PATH listing
+Volume serial number is 309C-B249
+C:.
+|   DataMiningProg.pyproj
+|   out.txt
+|   SemiSupervised.zip
+|   SemiSupervised_old.zip
+|   
++---SemiSupervised
+|   |   __main__.py
+|   |   
+|   \---SemiSupervised
+|           ClassificationTree.py
+|           KMeans.py
+|           Learner.py
+|           Test.py
+|           __init__.py
+|           
+\---__pycache__
+        ClassificationTree.cpython-34.pyc
+        DataMiningProg.cpython-34.pyc
+        data_mining.cpython-34.pyc
+        KMeans.cpython-34.pyc
+        Main.cpython-34.pyc
+        

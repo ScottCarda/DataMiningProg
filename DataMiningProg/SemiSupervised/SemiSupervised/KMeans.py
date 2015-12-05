@@ -33,7 +33,8 @@ def MaxDisCentriodSelc(bi_unlabeled):
     return finalClusters
 
 def cen_sel_random(bi_unlabeled):
-    rand_1 = random.randint(0,len(bi_unlabeled)) #randomly select the 2 centroid from the unlabeled data
+    #randomly select the 2 centroid from the unlabeled data
+    rand_1 = random.randint(0,len(bi_unlabeled))
     rand_2 = random.randint(0,len(bi_unlabeled))
 
     # if the two random centroids happen to be equal re select centroid 2
@@ -98,9 +99,8 @@ def KMeans(bi_unlabeled, rand_centroid_1, rand_centroid_2):
             else:
                 rand_centroid_2 = rand_centroid_2 + '0'
 
-    
-
-    finalClusters = convertOutput(rand_centroid_1,rand_centroid_2,c1Calc,c2Calc)
+    finalClusters = \
+        convertOutput(rand_centroid_1,rand_centroid_2,c1Calc,c2Calc)
     return finalClusters
 
 def mindist(c1,c2,point):

@@ -35,7 +35,7 @@ def ReadDataFile( filename ):
                     new_record = record.split(',')
                     new_record = new_record[1:]
                     new_record = ConvertToBinary(new_record)     
-                    #append record to the unlabel list and new_record to binary list
+                    #append new_record to the unlabeled list
                     unlabeled.append(new_record)
                 else:
                     new_record = record.split(',')
@@ -66,11 +66,6 @@ def CreateLearner( attributes, labeled, unlabeled ):
         centroid = ConvertToDictionary( cluster.pop(0), attributes[1:] )
         #classify centroid
         clss = tree.Classify( centroid )
-        #convert class to binary value
-        #if clss == 'democrat':
-        #    clss = '1'
-        #elif clss == 'republican':
-        #    clss = '0'
         #apply class to all records in a cluster
         for record in cluster:
             data.append( clss + record )

@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import SemiSupervised as ss
 
 def Main():
@@ -15,8 +15,9 @@ def Main():
     for record in data:
         record = ss.ConvertToDictionary(record, attributes)
         classes.append(tree.Classify(record))
-
-    print(ss.ErrorComp( data, classes ) )
+            
+    ss.ErrorComp( data, classes )
+    ss.conf_matrix( data, classes )
 
     return tree
 

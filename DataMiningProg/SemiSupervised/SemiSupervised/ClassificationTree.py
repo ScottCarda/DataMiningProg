@@ -14,9 +14,9 @@ class ClassificationTree(dict):
         '''
         Returns a classification tree. The data parameter should be a list of
         records, each record being a dictionary of the
-        form {attribute name: value}. The class_attr is the name of the attribute
-        that is to be the class. The optional attr_done parameter should
-        be a set of attribute names.
+        form {attribute name: value}. The class_attr is the name of the
+        attribute that is to be the class. The optional attr_done parameter
+        should be a set of attribute names.
         '''
         #things to stop on:
         #done- empty data (ERROR)
@@ -78,16 +78,19 @@ class ClassificationTree(dict):
 
         else:
             #get the attribute that produces the best split
-            best_split = ClassificationTree.find_best_split( data, attributes, class_attr )
+            best_split = ClassificationTree.find_best_split( data, attributes,
+                                                            class_attr )
             root = {best_split:{}} #initialize the tree to return
             #acquire all possible values of best split attribute
             values = {record[best_split] for record in data}
             for v in values:
-                sub_data = [record for record in data if record[best_split] == v]
+                sub_data = \
+                    [record for record in data if record[best_split] == v]
                 sub_attr = set(attributes)  #copy attribute set
                 sub_attr -= {best_split}    #remove attribute used to split
                 #get subtrees
-                root[best_split][v] = self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr )
+                root[best_split][v] = \
+                    self.__PrivateTreeGrowth( sub_data, class_attr, sub_attr )
         #return the classification tree
         return root
 
@@ -106,14 +109,6 @@ class ClassificationTree(dict):
                 return x
             else:
                 tree = x
-
-    def BuildFakeTree( self ):
-        tree = { 'a': {
-            10: "blue", 1: { 'b': {
-                5: "red", 2: { 'c': {
-                    9: "yellow", 3: "green"
-            } } } } } }
-        self.update( tree )
 
     @staticmethod
     def find_best_split( data, attributes, class_attr ):
@@ -162,8 +157,10 @@ class ClassificationTree(dict):
                         attr_count[attr]['A=F:+'] += 1.0
         
         # calculate each attribute's entropy
-        Eo_rep = -1 * (rep_count/num_records) * log((rep_count/num_records), 2) if rep_count != 0 else 0
-        Eo_dem = -1 * (dem_count/num_records) * log((dem_count/num_records), 2) if dem_count != 0 else 0
+        Eo_rep = -1 * (rep_count/num_records) * \
+            log((rep_count/num_records), 2) if rep_count != 0 else 0
+        Eo_dem = -1 * (dem_count/num_records) * \
+            log((dem_count/num_records), 2) if dem_count != 0 else 0
         Eorig = Eo_rep + Eo_dem
 
         for attr in attributes:
@@ -206,35 +203,3 @@ class ClassificationTree(dict):
 
         # return attribute best to split
         return maxEntropyAttr
-
-def FakeData():
-    data = list()
-    for i in range(1, 30, 3):
-        val = i%4
-        if val == 0:
-            classVal = 'red'
-        elif val == 1:
-            classVal = 'green'
-        elif val == 2:
-            classVal = 'blue'
-        elif val == 3:
-            classVal = 'yellow'
-        record = {'a':i, 'b':i+1, 'c':i+2, 'class': classVal}
-        data.append(record)
-    return data
-
-def FakeBadData():
-    data = [
-        {'a':6, 'b':2},
-        {'a':5, 'c':8},
-        {'a':3, 'b':7},
-        ]
-    return data
-
-if __name__ == '__main__':
-    z = ClassificationTree()
-    y = z.TreeGrowth( FakeData(), "class" )
-    print("Function Return:")
-    print(y)
-    print("ClassificationTree Value:")
-    print(z)
